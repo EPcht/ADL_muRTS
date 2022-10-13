@@ -1,0 +1,74 @@
+\documentclass[french]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper]{geometry}
+\usepackage{babel}
+\begin{document}
+	
+	\Huge{Feuille de route}
+	
+	\Large{Projet d'IA appliquée à µRTS} \hfill
+	\vspace{10mm}
+	
+	\small
+		\hfill PAINCHAULT Emmanuel
+		
+		\hfill TRABELSI Ayoub
+		
+		\hfill RASSAT Marian
+		
+	\vspace{5mm}
+	
+	\section*{Introduction}
+		\paragraph*{}
+		L’utilisation d’IA dans le domaine du jeu vidéo n’est pas récente, et se trouve être dans la plupart d’entre eux un des aspects essentiels afin de fournir une expérience qualitative aux joueurs.
+	
+		\paragraph*{}
+		Elle peut aussi permettre de s’adapter au niveau du joueur en proposant plusieurs niveaux de difficultés. Une des façons de faire autrefois était d’ajuster des mécaniques telles que les points de vie ou de dégâts, aujourd’hui il est devenu accessible de pouvoir influencer la stratégie qu'adopte l’IA durant son exécution.
+		
+		
+	\section{Spécifications fonctionnelles}
+		\paragraph*{}
+		L'objectif de ce projet est, dans un premier temps, de se familiariser avec l'algorithme dit PPO, afin d'être capables d'expliquer au mieux possible le fonctionnement de celui-ci de manière générale, mais également au sein de µRTS, le jeu dont il est question ici.
+		
+		\paragraph*{}
+		Par ailleurs, en accomplissant cette tâche, il nous sera impératif de se familiariser avec les environnements "gym" permettant l'entraînement d'une IA à un jeu ou à une tâche. Ainsi il sera question de programmer une implémentation de l'algorithme étudié au sein d'un environnement de recherche récent (plusieurs papiers de recherche utilisant cet environnement ont déjà pu être publiés, entre 2019 et 2021).
+		
+		\paragraph*{}
+		Enfin, et c'est le réel objectif final du projet, nous devrons obtenir des résultats non-triviaux de la part de notre IA, c'est-à-dire une IA qui aura une réelle stratégie au long du jeu, explicable, et qui pourrait battre un humain débutant ou intermédiaire au jeu.
+	
+	
+	\section{Contraintes techniques}
+		\paragraph*{}
+		µRTS est un jeu développé en Java. Ainsi, celui-ci sera essentiel au bon fonctionnement du projet. Il sera donc installé sur tous les environnements sous lesquels nous travaillerons.
+		
+		\paragraph*{}
+		De plus, l'environnement Gym qui servira d'espace d'entraînement à notre IA est programmé en Python. Nous l'utiliserons donc également. Ce dernier a aussi pour deuxième avantage que beaucoup de modules déjà existants permettent la création de modèles d'IA, ce qui sera certainement un atout majeur dans l'avancement et le bon déroulement du projet.
+		
+		\paragraph*{}
+		Le code sera déposé sur Git, et chacun pourra l'exécuter de la manière dont il l'entend. Puisque Python et Java sont tous deux cross-platform, il ne sera pas nécessaire d'avoir un environnement commun, partagé ou même similaire pour travailler.
+		
+	
+	\section{Principales étapes envisagées}
+		\paragraph*{}
+		Plusieurs étapes à réaliser peuvent déjà se dégager de tout cela :
+		\vspace{2mm}
+		
+		\begin{itemize}
+			\item Se renseigner sur les algorithmes PPO  (le principe général, la manière de fonctionner dans le cas des RTS ou plus généralement des jeux, etc.)
+			\vspace{2mm}
+			\item Apprendre à utiliser Gym pour entraîner une IA et en sortir des résultats utilisables (statistiques, model fitness, "Trueskill")
+			\vspace{2mm}
+			\item Arriver à implémenter un algorithme PPO dans l'environnement Gym et obtenir des résultats
+			\vspace{2mm}
+			\item Modifier et améliorer le modèle (hyperparamètres etc.) afin d'obtenir des résultats non-triviaux, relevant d'un apprentissage indéniable, et si possible obtenir au final une IA capable de jouer très bien contre des humains, sur des maps de tailles et de configurations inconnues, ou encore avec des stratégies variées
+		\end{itemize}
+
+	\section{Répartition des tâches}
+		\paragraph*{}
+		A créer
+	
+	
+		
+\end{document}
