@@ -1,0 +1,3 @@
+rts.RemoteGame : classe passée en public ainsi que son constructeur
+ai.socket.SocketAI : ligne 208 décommenté
+rts.UnitAction : ligne 202 a.unitType == unitType transformé en a.unitType.equals(unitType)
