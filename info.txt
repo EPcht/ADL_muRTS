@@ -1,0 +1,43 @@
+getAction :
+{
+    'time': 0, 
+    'pgs': 
+    {
+        'width': 8, 
+        'height': 8, 
+        'terrain': '0000000000000000000000000000000000000000000000000000000000000000', 
+        'players': 
+        [
+            {
+                'ID': 0, 
+                'resources': 5
+            }, 
+            {
+                'ID': 1,
+                'resources': 5
+            }
+        ], 
+        'units': 
+        [
+            {
+                'type': 'Resource', 
+                'ID': 0, 
+                'player': -1, 
+                'x': 0, 
+                'y': 0, 
+                'resources': 20, 
+                'hitpoints': 1
+            }, 
+            {
+                'type': 'Base', 
+                'ID': 2, 
+                'player': 0, 
+                'x': 2, 
+                'y': 1, 
+                'resources': 0, 
+                'hitpoints': 10
+            }
+        ]
+    }, 
+    'actions': []
+    }

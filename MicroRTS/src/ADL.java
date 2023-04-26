@@ -32,8 +32,8 @@ public class ADL {
             int serializationType = 2; // JSON
             String mapLocation = "../maps/8x8/bases8x8.xml";
             int maxCycles = 5000;
-            int updateInterval = 10;
-            boolean partiallyObservable = true;
+            int updateInterval = 20;
+            boolean partiallyObservable = false;
             int uttVersion = 2;
             // NSP
             int conflictPolicy = 1;

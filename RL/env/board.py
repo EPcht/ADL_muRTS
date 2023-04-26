@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from rts.player.player import Player
+
 import pip
 
 try:
@@ -37,7 +43,9 @@ class Board:
     def close(self):
         pygame.quit()
 
-    def refresh(self, terrainMap, units, players):
+    def refresh(self, terrainMap, units, players: list[Player]):
+        pygame.event.pump()
+
         self.screen.fill("white")
         for i in range(self.rowNb + 1):
             pygame.draw.line(self.screen, "black", (self.padding, self.rowCoord[i]), (self.width - self.padding, self.rowCoord[i]))
@@ -58,7 +66,7 @@ class Board:
                     rect = pygame.Rect(self.padding + x * self.cell_dimension + 1, self.padding + y * self.cell_dimension + 1, self.cell_dimension - 1, self.cell_dimension - 1)
                     pygame.draw.rect(self.screen, (0, 84, 0), rect)
 
-    def drawUnit(self, unit, players):
+    def drawUnit(self, unit, players: list[Player]):
         borderColor = 'red'
         if unit.player == 0:
             borderColor = 'blue'
@@ -84,8 +92,8 @@ class Board:
             pygame.draw.rect(self.screen, 'white', rect)
             pygame.draw.rect(self.screen, borderColor, rect, 2)
             for player in players:
-                if player['ID'] == unit.player:
-                    text = self.font.render(str(player['resources']), True, 'black')
+                if player.id == unit.player:
+                    text = self.font.render(str(player.resources), True, 'black')
                     textCenter = text.get_rect().center
                     rectCenter = rect.center
                     self.screen.blit(text, [rectCenter[i] - textCenter[i] for i in range(len(rect.center))])

@@ -3,14 +3,17 @@ import socket
 import json
 import numpy as np
 
-from unit.unit import Unit
-from unit.unit_action import UnitAction
-from unit.unit_type import UnitType
-from unit.unit_type_table import UnitTypeTable
+from rts.unit.unit import Unit
+from rts.unit.unit_action import UnitAction
+from rts.unit.unit_type import UnitType
+from rts.unit.unit_type_table import UnitTypeTable
 
-from player.player_action import PlayerAction
+from rts.player.player import Player
+from rts.player.player_action import PlayerAction
 
-from board import Board
+from rts.physical_game_state import PhysicalGameState
+
+from env.board import Board
 
 DEBUG = False
 HOST = "127.0.0.1"
@@ -28,7 +31,7 @@ class AI:
         self.player = 0
         self.players = []
         self.unitTypeTable = UnitTypeTable()
-        self.units = []
+        self.units: list[Unit] = []
         self.neutralUnits = []
         self.enemyUnits = []
         self.actions = []
@@ -106,7 +109,10 @@ class AI:
             print("GET ACTION")
 
         ga = json.loads(self.currentMessage)
-        self.players = ga['pgs']['players']
+        print(ga)
+        self.players = []
+        for player in ga['pgs']['players']:
+            self.players += [Player.fromJSON(player)]
         self.units = []
         self.neutralUnits = []
         self.enemyUnits = []
@@ -127,17 +133,18 @@ class AI:
 
         playerAction = PlayerAction()
 
-        playerResources = 0
-        for player in self.players:
-            if player['ID'] == self.player:
-                playerResources = player['resources']
-                break
+        pgs = PhysicalGameState(self.players, self.unitTypeTable, self.terrainWidth, self.terrainHeight, self.terrainMap, self.units + self.neutralUnits + self.enemyUnits)
 
-        self.units[0].getUnitActions(playerResources, self.units + self.neutralUnits + self.enemyUnits, (self.terrainWidth, self.terrainHeight), self.terrainMap)
-        
-        # unitAction = UnitAction()
-        # unitAction.produce(UnitAction.DIRECTION_UP, self.unitTypeTable.find('Worker'))
-        # playerAction.addAction(self.units[0], unitAction)
+        for unit in self.units:
+            alreadyInAction = False
+            for action in self.actions:
+                if action[0] == unit.ID:
+                    alreadyInAction = True
+                    break
+            if not alreadyInAction:
+                availableActions = unit.getUnitActions(pgs)
+                if len(availableActions) > 0:
+                    playerAction.addAction(unit, np.random.choice(availableActions))
 
         self.clientSocket.sendall(bytes(playerAction.toJSON(), encoding='utf-8') + b'\n')
 
@@ -154,6 +161,3 @@ class AI:
         elif messages[0].startswith(b'getAction'):
             self.player = int(str(messages[0], encoding='utf-8').split()[-1])
             self.processGetAction()
-
-ai = AI()
-ai.start()

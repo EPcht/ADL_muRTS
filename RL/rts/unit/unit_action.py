@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from rts.unit.unit_type import UnitType
+
 class UnitAction:
 
     TYPE_NONE = 0
@@ -13,31 +19,54 @@ class UnitAction:
     DIRECTION_DOWN = 2
     DIRECTION_LEFT = 3
 
-    def __init__(self):
-        self.type = self.TYPE_NONE
-        self.x = -1
-        self.y = -1
-        self.parameter = self.DIRECTION_NONE
-        self.unitType = None
-
-    def harvest(self, direction):
-        self.type = self.TYPE_HARVEST
-        self.parameter = direction
-
-    def produce(self, direction, unitType):
-        self.type = self.TYPE_PRODUCE
-        self.parameter = direction
-        self.unitType = unitType
-
-    def attack(self, x, y):
-        self.type = self.TYPE_ATTACK_LOCATION
+    def __init__(self, type: int = TYPE_NONE, x: int = -1, y: int = -1, parameter: int = DIRECTION_NONE, unitType: UnitType = None):
+        self.type = type
         self.x = x
         self.y = y
+        self.parameter = parameter
+        self.unitType = unitType
+
+    @classmethod
+    def typeNone(cls):
+        return cls(cls.TYPE_NONE, -1, -1, 1, None)
+
+    @classmethod
+    def typeMove(cls, direction):
+        type = cls.TYPE_MOVE
+        parameter = direction
+        return cls(type, -1, -1, parameter, None)
+
+
+    @classmethod
+    def typeHarvest(cls, direction):
+        type = cls.TYPE_HARVEST
+        parameter = direction
+        return cls(type, -1, -1, parameter, None)
+
+    @classmethod
+    def typeReturn(cls, direction):
+        type = cls.TYPE_RETURN
+        parameter = direction
+        return cls(type, -1, -1, parameter, None)
+
+    @classmethod
+    def typeProduce(cls, direction, unitType):
+        type = cls.TYPE_PRODUCE
+        parameter = direction
+        unitType = unitType
+        return cls(type, -1, -1, parameter, unitType)
+
+    @classmethod
+    def typeAttack(cls, x, y):
+        type = cls.TYPE_ATTACK_LOCATION
+        x = x
+        y = y
+        return cls(type, x, y, cls.DIRECTION_NONE, None)
 
     def toJSON(self):
         json = "{\"type\":" + str(self.type)
         if self.type == self.TYPE_ATTACK_LOCATION:
-            json += ", \"x\":" + self.x + ",\"y\":" + self.y
+            json += ", \"x\":" + str(self.x) + ",\"y\":" + str(self.y)
         else:
             if self.parameter != self.DIRECTION_NONE:
                 json += ", \"parameter\":" + str(self.parameter)
