@@ -542,7 +542,7 @@ public class GameState {
         for(UnitActionAssignment uaa:readyToExecute) {
             unitActions.remove(uaa.unit);
             
-            System.out.println("Executing action for " + uaa.unit + " issued at time " + uaa.time + " with duration " + uaa.action.ETA(uaa.unit));
+            // System.out.println("Executing action for " + uaa.unit + " issued at time " + uaa.time + " with duration " + uaa.action.ETA(uaa.unit));
             
             uaa.action.execute(uaa.unit,this);
         }

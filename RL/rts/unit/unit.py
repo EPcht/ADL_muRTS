@@ -75,36 +75,31 @@ class Unit:
                 if uLeft != None and uLeft.type.isStockpile and uLeft.player == self.player:
                         actions += [UnitAction.typeReturn(UnitAction.DIRECTION_LEFT)]
 
+        checkUp     = False if uUp    != None else pgs.checkCellAvailability(self.x, self.y - 1)
+        checkRight  = False if uRight != None else pgs.checkCellAvailability(self.x + 1, self.y)
+        checkDown   = False if uDown  != None else pgs.checkCellAvailability(self.x, self.y + 1)
+        checkLeft   = False if uLeft  != None else pgs.checkCellAvailability(self.x - 1, self.y)
+
         for unitName in self.type.produces:
             unitType = pgs.utt.find(unitName)
-            if unitType.cost <= pgs.getPlayerResources(self.player):
-                tUp = pgs.getTerrain(self.x, self.y - 1)
-                tRight = pgs.getTerrain(self.x + 1, self.y)
-                tDown =  pgs.getTerrain(self.x, self.y + 1)
-                tLeft = pgs.getTerrain(self.x - 1, self.y)
-                
-                if tUp == PhysicalGameState.TERRAIN_NONE and uUp == None:
+            if unitType.cost <= pgs.getPlayerResources(self.player):                
+                if checkUp:
                     actions += [UnitAction.typeProduce(UnitAction.DIRECTION_UP, unitType)]
-                if tRight == PhysicalGameState.TERRAIN_NONE and uRight == None:
+                if checkRight:
                     actions += [UnitAction.typeProduce(UnitAction.DIRECTION_RIGHT, unitType)]
-                if tDown == PhysicalGameState.TERRAIN_NONE and uDown == None:
+                if checkDown:
                     actions += [UnitAction.typeProduce(UnitAction.DIRECTION_DOWN, unitType)]
-                if tLeft == PhysicalGameState.TERRAIN_NONE and uLeft == None:
+                if checkLeft:
                     actions += [UnitAction.typeProduce(UnitAction.DIRECTION_LEFT, unitType)]
 
         if self.type.canMove:
-            tUp = pgs.getTerrain(self.x, self.y - 1)
-            tRight = pgs.getTerrain(self.x + 1, self.y)
-            tDown =  pgs.getTerrain(self.x, self.y + 1)
-            tLeft = pgs.getTerrain(self.x - 1, self.y)
-            
-            if tUp == PhysicalGameState.TERRAIN_NONE and uUp == None:
+            if checkUp:
                 actions += [UnitAction.typeMove(UnitAction.DIRECTION_UP)]
-            if tRight == PhysicalGameState.TERRAIN_NONE and uRight == None:
+            if checkRight:
                 actions += [UnitAction.typeMove(UnitAction.DIRECTION_RIGHT)]
-            if tDown == PhysicalGameState.TERRAIN_NONE and uDown == None:
+            if checkDown:
                 actions += [UnitAction.typeMove(UnitAction.DIRECTION_DOWN)]
-            if tLeft == PhysicalGameState.TERRAIN_NONE and uLeft == None:
+            if checkLeft:
                 actions += [UnitAction.typeMove(UnitAction.DIRECTION_LEFT)]
         
         return actions

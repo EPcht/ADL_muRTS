@@ -1,9 +1,16 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from rts.unit.unit import Unit
+    from rts.unit.unit_action import UnitAction
+
 class PlayerAction:
 
     def __init__(self):
         self.actions = []
 
-    def addAction(self, unit, unitAction):
+    def addAction(self, unit: Unit, unitAction: UnitAction):
         self.actions.append([unit, unitAction])
 
     def toJSON(self):

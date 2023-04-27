@@ -19,12 +19,12 @@ class UnitAction:
     DIRECTION_DOWN = 2
     DIRECTION_LEFT = 3
 
-    def __init__(self, type: int = TYPE_NONE, x: int = -1, y: int = -1, parameter: int = DIRECTION_NONE, unitType: UnitType = None):
-        self.type = type
-        self.x = x
-        self.y = y
-        self.parameter = parameter
-        self.unitType = unitType
+    def __init__(self, type: int = TYPE_NONE, x: int = -1, y: int = -1, parameter: int = DIRECTION_NONE, unitTypeName: str = None):
+        self.type:          int = type
+        self.x:             int = x
+        self.y:             int = y
+        self.parameter:     int = parameter
+        self.unitTypeName:  str = unitTypeName
 
     @classmethod
     def typeNone(cls):
@@ -35,7 +35,6 @@ class UnitAction:
         type = cls.TYPE_MOVE
         parameter = direction
         return cls(type, -1, -1, parameter, None)
-
 
     @classmethod
     def typeHarvest(cls, direction):
@@ -54,7 +53,7 @@ class UnitAction:
         type = cls.TYPE_PRODUCE
         parameter = direction
         unitType = unitType
-        return cls(type, -1, -1, parameter, unitType)
+        return cls(type, -1, -1, parameter, unitType.name)
 
     @classmethod
     def typeAttack(cls, x, y):
@@ -70,8 +69,8 @@ class UnitAction:
         else:
             if self.parameter != self.DIRECTION_NONE:
                 json += ", \"parameter\":" + str(self.parameter)
-            if self.unitType != None:
-                 json += ", \"unitType\":\"" + self.unitType.name + "\""
+            if self.unitTypeName != None:
+                 json += ", \"unitType\":\"" + self.unitTypeName + "\""
         json += "}"
         return json
     
@@ -102,7 +101,7 @@ class UnitAction:
         elif self.type == self.TYPE_RETURN:
             s += f"RETURN, PARAMETER : {self.parameter}"
         elif self.type == self.TYPE_PRODUCE:
-            s += f"PRODUCE, PARAMETER : {self.parameter}, UNITTYPE : {self.unitType.name}"
+            s += f"PRODUCE, PARAMETER : {self.parameter}, UNITTYPE : {self.unitTypeName}"
         elif self.type == self.TYPE_ATTACK_LOCATION:
             s += f"ATTACK_LOCATION, X : {self.x}, Y : {self.y}"
         return s

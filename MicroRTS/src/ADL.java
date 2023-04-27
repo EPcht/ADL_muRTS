@@ -30,8 +30,8 @@ public class ADL {
 
             // Argument à récupérer via envoie de message
             int serializationType = 2; // JSON
-            String mapLocation = "../maps/8x8/bases8x8.xml";
-            int maxCycles = 5000;
+            String mapLocation = "../maps/3x3/bases3x3.xml";
+            int maxCycles = 10000;
             int updateInterval = 20;
             boolean partiallyObservable = false;
             int uttVersion = 2;
