@@ -49,7 +49,7 @@ class UnitAction:
         return cls(type, -1, -1, parameter, None)
 
     @classmethod
-    def typeProduce(cls, direction, unitType):
+    def typeProduce(cls, direction, unitType: UnitType):
         type = cls.TYPE_PRODUCE
         parameter = direction
         unitType = unitType
