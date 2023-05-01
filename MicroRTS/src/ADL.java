@@ -1,6 +1,9 @@
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 import java.lang.reflect.Constructor;
 
 import rts.Game;
@@ -20,7 +23,6 @@ public class ADL {
             return;
 
         try {
-            System.out.println("Trying to create a server on port : " + args[0] + "...");
             ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]));
             Socket socket = serverSocket.accept();
                     
@@ -32,23 +34,22 @@ public class ADL {
             int serializationType = 2; // JSON
             String mapLocation = "../maps/3x3/bases3x3.xml";
             int maxCycles = 10000;
-            int updateInterval = 20;
-            boolean partiallyObservable = false;
+            int updateInterval = 5;
             int uttVersion = 2;
             // NSP
             int conflictPolicy = 1;
-            LaunchMode launchMode = LaunchMode.valueOf("STANDALONE");
+            LaunchMode launchMode = LaunchMode.valueOf("SERVER");
             // NSP
             boolean includeConstantsInState = true;
             // NSP
             boolean compressTerrain = false;
-            boolean headless = false;
+            boolean headless = true;
             
             // Argument à récupérer via envoie de message à chaque tour de boucle
             String AI1 = "ai.RandomAI";
             String AI2 = "ai.RandomAI";
 
-            GameSettings gameSettings = new GameSettings(launchMode, serverAddress, serverPort, serializationType, mapLocation, maxCycles, updateInterval, partiallyObservable, uttVersion, conflictPolicy, includeConstantsInState, compressTerrain, headless, AI1, AI2);
+            GameSettings gameSettings = new GameSettings(launchMode, serverAddress, serverPort, serializationType, mapLocation, maxCycles, updateInterval, false, uttVersion, conflictPolicy, includeConstantsInState, compressTerrain, headless, AI1, AI2);
 
             UnitTypeTable unitTypeTable = new UnitTypeTable(
                 gameSettings.getUTTVersion(), gameSettings.getConflictPolicy());
@@ -60,13 +61,24 @@ public class ADL {
                 gameSettings.isCompressTerrain(), socket);
             // player 2 is created using the info from gameSettings
             Constructor cons2 = Class.forName(gameSettings.getAI2())
-                .getConstructor(UnitTypeTable.class);
+            .getConstructor(UnitTypeTable.class);
             AI player_two = (AI) cons2.newInstance(unitTypeTable);
+            
+            BufferedReader in_pipe = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            boolean stop = false;
 
-            Game game = new Game(gameSettings, player_one, player_two);
-            System.out.println("Starting the game...");
-            game.start();
-
+            while(!stop){
+                try{
+                    Game game = new Game(gameSettings, player_one, player_two);
+                    game.start();
+                }
+                catch(Exception e){}
+                
+                while(!in_pipe.ready()){}
+                
+                String msg = in_pipe.readLine();
+                if (msg.startsWith("STOP")) stop = true;
+            }
         } catch (Exception e ) {
             e.printStackTrace();
         }
@@ -89,12 +101,9 @@ int maxCycles = 5000;
 int updateInterval = 20;
 boolean partiallyObservable = true;
 int uttVersion = 2;
-// NSP
 int conflictPolicy = 1;
 LaunchMode launchMode = LaunchMode.valueOf("STANDALONE");
-// NSP
 boolean includeConstantsInState = true;
-// NSP
 boolean compressTerrain = false;
 boolean headless = false;
 
@@ -104,12 +113,9 @@ int maxCycles = readIntegerProperty(prop, "max_cycles", 5000);
 int updateInterval = readIntegerProperty(prop, "update_interval", 20);
 boolean partiallyObservable = Boolean.parseBoolean(prop.getProperty("partially_observable"));
 int uttVersion = readIntegerProperty(prop, "UTT_version", 2);
-// NSP
 int conflictPolicy = readIntegerProperty(prop, "conflict_policy", 1);
 LaunchMode launchMode = LaunchMode.valueOf(prop.getProperty("launch_mode",  "GUI"));
-// NSP
 boolean includeConstantsInState = Boolean.parseBoolean(prop.getProperty("constants_in_state", "true"));
-// NSP
 boolean compressTerrain = Boolean.parseBoolean(prop.getProperty("compress_terrain", "false"));
 boolean headless = Boolean.parseBoolean(prop.getProperty("headless", "false"));
 

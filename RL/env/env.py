@@ -1,6 +1,7 @@
 import socket
 import json
 import numpy as np
+import time
 
 from rts.unit.unit import Unit
 from rts.unit.unit_action import UnitAction
@@ -12,9 +13,12 @@ from rts.player.player_action import PlayerAction
 
 from rts.physical_game_state import PhysicalGameState
 
-from env.board import Board
-
 DEBUG = False
+HEADLESS = True
+
+if not HEADLESS:
+    from env.board import Board
+
 HOST = "127.0.0.1"
 PORT = 10000
 
@@ -41,14 +45,30 @@ class Env:
 
         # For display
         self.cell_dimension:    int     = 30
-        self.board:             Board   = Board()
+        self.board:             Board   = None
+        if not HEADLESS:
+            self.board = Board()
 
         # For AI
         self.observation:       list[float] = []
-        self.observation_space: np.array    = 0
-        self.action_space:      np.array    = 0
+        self.observation_space: np.ndarray  = 0
+        self.action_space:      np.ndarray  = 0
         self.reward:            float       = 0
         self.done:              bool        = False
+
+        self.winReward:             float = 100
+        self.loseReward:            float = -100
+        self.harvestReward:         float = 10
+        self.returnReward:          float = 10
+        self.produceReward:         float = 10
+        self.produceBaseReward:     float = 10
+        self.produceWorkerReward:   float = 10
+        self.produceBarracksReward: float = 10
+        self.produceLightReward:    float = 10
+        self.produceHeavyReward:    float = 10
+        self.produceRangedReward:   float = 10
+        self.allyKilledReward:      float = 10
+        self.enemyKilledReward:     float = 10
 
     def start(self):
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,7 +89,9 @@ class Env:
         while not self.waitForInput:
             self.receiveMessage()
             self.processMessage()
-        self.board.refresh(self.terrainMap, self.units + self.neutralUnits + self.enemyUnits, self.players)
+        
+        if not HEADLESS:
+            self.board.refresh(self.terrainMap, self.units + self.neutralUnits + self.enemyUnits, self.players)
 
         self.observation_space = np.zeros((self.terrainWidth, self.terrainHeight, (5 + 5 + 3 + 9 + 6)))
         # In reference to the structuration given in Rapport_ADL_2.pdf page 8.
@@ -161,24 +183,62 @@ class Env:
     def step(self, aiActions):
         playerAction = PlayerAction()
 
+        if not HEADLESS:
+            time.sleep(0.02)
+
         actions = self.aiActionToActions(aiActions)
         for action in actions:
             playerAction.addAction(action[0], action[1])
 
         self.clientSocket.sendall(bytes(playerAction.toJSON(), encoding='utf-8') + b'\n')
 
+        self.reward = 0
+
         self.waitForInput = False
         while not self.waitForInput:
             self.receiveMessage()
             self.processMessage()
-        self.board.refresh(self.terrainMap, self.units + self.neutralUnits + self.enemyUnits, self.players)
+
+        if not HEADLESS:
+            self.board.refresh(self.terrainMap, self.units + self.neutralUnits + self.enemyUnits, self.players)
 
         self.computeObservation()
-
         return self.observation, self.reward, self.done
 
+    def reset(self):
+        if DEBUG:
+            print("RESET")
+
+        self.ack()
+
+        time.sleep(0.0001)
+
+        if DEBUG:
+            print("SENDED : RESET")
+        self.clientSocket.sendall(b'RESET\n')
+        
+        self.done = False
+
+        self.waitForInput = False
+
+        while not self.waitForInput:
+            self.receiveMessage()
+            self.processMessage()
+
     def stop(self):
-        self.board.close()
+        if DEBUG:
+            print("STOP")
+
+        self.ack()
+
+        time.sleep(0.0001)
+
+        if DEBUG:
+            print("SENDED : STOP")
+        self.clientSocket.sendall(b'STOP\n')
+
+        if not HEADLESS:
+            self.board.close()
 
     def ack(self):
         self.clientSocket.sendall(b'ack\n')
@@ -211,7 +271,6 @@ class Env:
         self.ack()
 
     def processPreGameAnalysis(self):
-        # Donne une vue d'ensemble de la carte au début du jeu.
         if DEBUG:
             print("PRE GAME ANALYSIS")
 
@@ -220,13 +279,12 @@ class Env:
         self.terrainHeight = int(pga['pgs']['height'])
         self.terrainMap = pga['pgs']['terrain']
 
-        self.board.resize(self.cell_dimension, (self.terrainHeight, self.terrainWidth))
+        if not HEADLESS:
+            self.board.resize(self.cell_dimension, (self.terrainHeight, self.terrainWidth))
 
         self.ack()
 
     def processGetAction(self):
-        # Donne une vue du point de vue du joueur si partiallyObservable est vrai.
-        # Donne une vue globale si partiallyObservable est faux.
         if DEBUG:
             print("GET ACTION")
 
@@ -234,22 +292,83 @@ class Env:
         self.players = []
         for player in ga['pgs']['players']:
             self.players += [Player.fromJSON(player)]
-        self.units = []
-        self.neutralUnits = []
-        self.enemyUnits = []
+
+        self.newUnits:      list[Unit]  = []
+        self.neutralUnits               = []
+        self.newEnemyUnits: list[Unit]  = []
+
         for unit in ga['pgs']['units']:
             _unit = Unit(self.unitTypeTable, unit)
             if _unit.player == self.player:
-                self.units += [_unit]
+                self.newUnits += [_unit]
             elif _unit.player == -1:
                 self.neutralUnits += [_unit]
             else:
-                self.enemyUnits += [_unit]
+                self.newEnemyUnits += [_unit]
+
+        # Calcul des rewards
+        for newUnit in self.newUnits:
+            produced = True
+            for lastUnit in self.units:
+                if newUnit.ID == lastUnit.ID:
+                    produced = False
+                    if newUnit.resources > lastUnit.resources:
+                        self.reward += self.harvestReward
+                    elif newUnit.resources < lastUnit.resources:
+                        self.reward += self.returnReward
+                    break
+            if produced:
+                self.reward += self.produceReward
+                if newUnit.type.name == "Base":
+                    self.reward += self.produceBaseReward
+                elif newUnit.type.name == "Worker":
+                    self.reward += self.produceWorkerReward
+                elif newUnit.type.name == "Barracks":
+                    self.reward += self.produceBarracksReward
+                elif newUnit.type.name == "Light":
+                    self.reward += self.produceLightReward
+                elif newUnit.type.name == "Heavy":
+                    self.reward += self.produceHeavyReward
+                elif newUnit.type.name == "Ranged":
+                    self.reward += self.produceRangedReward
+        
+        for lastUnit in self.units:
+            killed = True
+            for newUnit in self.newUnits:
+                if lastUnit.ID == newUnit.ID:
+                    killed = False
+                    break
+            if killed:
+                self.reward += self.allyKilledReward
+
+        for lastEnemyUnit in self.enemyUnits:
+            killed = True
+            for newEnemyUnit in self.newEnemyUnits:
+                if lastEnemyUnit.ID == newEnemyUnit.ID:
+                    killed = False
+                    break
+            if killed:
+                self.reward += self.enemyKilledReward
+
+        self.units = self.newUnits
+        self.enemyUnits = self.newEnemyUnits
+
+        # ==================
 
         self.onGoingActions = []
         for action in ga['actions']:
             _action = UnitAction()
             _action.fromJSON(action['action'])
+            # Si l'action est de type PRODUCE, retirer le coût de cette production aux ressources actuelles du joueur
+            # afin d'éviter des actions interdites
+            if _action.type == _action.TYPE_PRODUCE:
+                for unit in self.units:
+                    if unit.ID == action['ID']:
+                        for player in self.players:
+                            if player.id == self.player:
+                                player.resources -= self.unitTypeTable.find(_action.unitTypeName).cost
+                            break
+                        break
             self.onGoingActions += [[action['ID'], _action]]
 
         pgs = PhysicalGameState(
@@ -278,6 +397,16 @@ class Env:
         else:
             self.waitForInput = True
 
+    def processGameOver(self):
+        self.done = True
+        self.waitForInput = True
+        winner = self.currentMessage.split(b' ')[-1]
+        
+        if self.player == winner:
+            self.reward += self.winReward
+        else:
+            self.reward += self.loseReward
+
     def processMessage(self):
         messages = self.currentMessage.split(b'\n')
         self.currentMessage = messages[-2]
@@ -291,6 +420,8 @@ class Env:
         elif messages[0].startswith(b'getAction'):
             self.player = int(str(messages[0], encoding='utf-8').split()[-1])
             self.processGetAction()
+        elif messages[0].startswith(b'gameOver'):
+            self.processGameOver()
         else:
             print(messages)
             raise Exception("Error in env.py : processMessage\nMessage header isn't supported")
@@ -372,7 +503,7 @@ class Env:
                 relativeX = action.x - unit.x + self.maxRange
                 relativeY = action.y - unit.y + self.maxRange
 
-                aiAction[unit.x][unit.y][relativeX + relativeY * (self.maxRange * 2 + 1)] = 1
+                aiAction[unit.x][unit.y][28 + relativeX + relativeY * (self.maxRange * 2 + 1)] = 1
         
         return aiAction
 
@@ -420,11 +551,11 @@ class Env:
                             elif maxType == 5: # ATTACK
                                 relativeY = maxAttackParam // (self.maxRange * 2 + 1)
                                 relativeX = maxAttackParam - relativeY * (self.maxRange * 2 + 1)
-                                x = unit.x - self.maxRange + relativeX
-                                y = unit.y - self.maxRange + relativeY
-                                actions += [[unit, UnitAction.typeAttack(x, y)]]
+                                _x = unit.x - self.maxRange + relativeX
+                                _y = unit.y - self.maxRange + relativeY
+                                actions += [[unit, UnitAction.typeAttack(_x, _y)]]
                                 find = True
-                    if not find:  
+                    if not find:
                         raise Exception("An action was given to a non owned unit.")
 
         return actions
@@ -436,3 +567,85 @@ class Env:
             actions += [[unitWithActions[0], unitWithActions[1][np.random.randint(len(unitWithActions[1]))]]]
 
         return self.actionsToAiAction(actions)
+    
+    def getMask(self):
+        mask = np.zeros(self.action_space.shape, dtype=bool)
+
+        for unitWithActions in self.availableActions:
+            _unit: Unit = unitWithActions[0]
+            for action in unitWithActions[1]:
+                _action: UnitAction = action
+
+                if _action.type == _action.TYPE_NONE:
+                    mask[_unit.x][_unit.y][0] = True  
+
+                elif _action.type == _action.TYPE_MOVE:
+                    mask[_unit.x][_unit.y][1] = True   
+
+                    if _action.parameter == _action.DIRECTION_UP:
+                        mask[_unit.x][_unit.y][6] = True
+                    elif _action.parameter == _action.DIRECTION_RIGHT:
+                        mask[_unit.x][_unit.y][7] = True
+                    elif _action.parameter == _action.DIRECTION_DOWN:
+                        mask[_unit.x][_unit.y][8] = True
+                    elif _action.parameter == _action.DIRECTION_LEFT:
+                        mask[_unit.x][_unit.y][9] = True
+
+                elif _action.type == _action.TYPE_HARVEST:
+                    mask[_unit.x][_unit.y][2] = True   
+
+                    if _action.parameter == _action.DIRECTION_UP:
+                        mask[_unit.x][_unit.y][10] = True
+                    elif _action.parameter == _action.DIRECTION_RIGHT:
+                        mask[_unit.x][_unit.y][11] = True
+                    elif _action.parameter == _action.DIRECTION_DOWN:
+                        mask[_unit.x][_unit.y][12] = True
+                    elif _action.parameter == _action.DIRECTION_LEFT:
+                        mask[_unit.x][_unit.y][13] = True
+
+                elif _action.type == _action.TYPE_RETURN:
+                    mask[_unit.x][_unit.y][3] = True   
+
+                    if _action.parameter == _action.DIRECTION_UP:
+                        mask[_unit.x][_unit.y][14] = True
+                    elif _action.parameter == _action.DIRECTION_RIGHT:
+                        mask[_unit.x][_unit.y][15] = True
+                    elif _action.parameter == _action.DIRECTION_DOWN:
+                        mask[_unit.x][_unit.y][16] = True
+                    elif _action.parameter == _action.DIRECTION_LEFT:
+                        mask[_unit.x][_unit.y][17] = True
+
+                elif _action.type == _action.TYPE_PRODUCE:
+                    mask[_unit.x][_unit.y][4] = True   
+
+                    if _action.parameter == _action.DIRECTION_UP:
+                        mask[_unit.x][_unit.y][18] = True
+                    elif _action.parameter == _action.DIRECTION_RIGHT:
+                        mask[_unit.x][_unit.y][19] = True
+                    elif _action.parameter == _action.DIRECTION_DOWN:
+                        mask[_unit.x][_unit.y][20] = True
+                    elif _action.parameter == _action.DIRECTION_LEFT:
+                        mask[_unit.x][_unit.y][21] = True
+
+                    if _action.unitTypeName == "Base":
+                        mask[_unit.x][_unit.y][22] = True
+                    elif _action.unitTypeName == "Barracks":
+                        mask[_unit.x][_unit.y][23] = True
+                    elif _action.unitTypeName == "Worker":
+                        mask[_unit.x][_unit.y][24] = True
+                    elif _action.unitTypeName == "Light":
+                        mask[_unit.x][_unit.y][25] = True
+                    elif _action.unitTypeName == "Heavy":
+                        mask[_unit.x][_unit.y][26] = True
+                    elif _action.unitTypeName == "Ranged":
+                        mask[_unit.x][_unit.y][27] = True
+
+                elif _action.type == _action.TYPE_ATTACK_LOCATION:
+                    mask[_unit.x][_unit.y][5] = True  
+
+                    relativeX = _action.x - _unit.x + self.maxRange
+                    relativeY = _action.y - _unit.y + self.maxRange
+
+                    mask[_unit.x][_unit.y][28 + relativeX + relativeY * (self.maxRange * 2 + 1)] = True
+
+        return mask

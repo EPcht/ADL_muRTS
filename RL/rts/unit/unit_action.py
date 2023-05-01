@@ -86,7 +86,7 @@ class UnitAction:
         except:
             None
         try:
-            self.unitType = json['unitType']
+            self.unitTypeName = json['unitType']
         except:
             None
 
