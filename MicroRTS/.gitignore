@@ -1,6 +1,11 @@
 *.*~
 *.class
-/bin/
+/bin/ai
+/bin/gui
+/bin/rts
+/bin/utils
+/bin/ADL.class
+/bin/MicroRTS.jar
 /.classpath
 /.project
 /.idea

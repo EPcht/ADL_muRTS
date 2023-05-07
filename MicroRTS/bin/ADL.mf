@@ -1,0 +1,13 @@
+Manifest-version: 1.0
+Class-Path: 
+    ../lib/jdom.jar
+    ../lib/minimal-json-0.9.4.jar
+    ../lib/weka.jar
+    ../lib/bots/Coac.jar
+    ../lib/bots/Droplet.jar
+    ../lib/bots/GRojoA3N.jar
+    ../lib/bots/Izanagi.jar
+    ../lib/bots/mayariBot.jar
+    ../lib/bots/MixedBot.jar
+    ../lib/bots/TiamatBot.jar
+Main-Class: ADL
