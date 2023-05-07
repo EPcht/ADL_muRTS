@@ -101,7 +101,7 @@ class Env:
             if unitType.attackRange > self.maxRange:
                 self.maxRange = unitType.attackRange
         # max_range create a square around each unit to determine the relative position of the attacked unit
-        self.action_space = np.zeros((self.terrainWidth, self.terrainHeight, (6 + 4 + 4 + 4 + 4 + 6 + (self.maxRange * 2 + 1) ** 2)))
+        self.action_space = np.zeros((self.terrainWidth, self.terrainHeight, 7))
         # In reference to the structuration given in Rapport_ADL_2.pdf page 8.
 
         self.computeObservation()
@@ -434,76 +434,76 @@ class Env:
             action: UnitAction  = unitWithAction[1]
 
             if action.type == action.TYPE_NONE:
-                aiAction[unit.x][unit.y][0] = 1
+                aiAction[unit.x][unit.y][0] = 0
 
             elif action.type == action.TYPE_MOVE:
-                aiAction[unit.x][unit.y][1] = 1
+                aiAction[unit.x][unit.y][0] = 1
 
                 if action.parameter == action.DIRECTION_UP:
-                    aiAction[unit.x][unit.y][6] = 1
+                    aiAction[unit.x][unit.y][1] = 0
                 elif action.parameter == action.DIRECTION_RIGHT:
-                    aiAction[unit.x][unit.y][7] = 1
+                    aiAction[unit.x][unit.y][1] = 1
                 elif action.parameter == action.DIRECTION_DOWN:
-                    aiAction[unit.x][unit.y][8] = 1
+                    aiAction[unit.x][unit.y][1] = 2
                 elif action.parameter == action.DIRECTION_LEFT:
-                    aiAction[unit.x][unit.y][9] = 1
+                    aiAction[unit.x][unit.y][1] = 3
 
             elif action.type == action.TYPE_HARVEST:
-                aiAction[unit.x][unit.y][2] = 1
+                aiAction[unit.x][unit.y][0] = 2
 
                 if action.parameter == action.DIRECTION_UP:
-                    aiAction[unit.x][unit.y][10] = 1
+                    aiAction[unit.x][unit.y][2] = 0
                 elif action.parameter == action.DIRECTION_RIGHT:
-                    aiAction[unit.x][unit.y][11] = 1
+                    aiAction[unit.x][unit.y][2] = 1
                 elif action.parameter == action.DIRECTION_DOWN:
-                    aiAction[unit.x][unit.y][12] = 1
+                    aiAction[unit.x][unit.y][2] = 2
                 elif action.parameter == action.DIRECTION_LEFT:
-                    aiAction[unit.x][unit.y][13] = 1
+                    aiAction[unit.x][unit.y][2] = 3
 
             elif action.type == action.TYPE_RETURN:
-                aiAction[unit.x][unit.y][3] = 1
+                aiAction[unit.x][unit.y][0] = 3
 
                 if action.parameter == action.DIRECTION_UP:
-                    aiAction[unit.x][unit.y][14] = 1
+                    aiAction[unit.x][unit.y][3] = 0
                 elif action.parameter == action.DIRECTION_RIGHT:
-                    aiAction[unit.x][unit.y][15] = 1
+                    aiAction[unit.x][unit.y][3] = 1
                 elif action.parameter == action.DIRECTION_DOWN:
-                    aiAction[unit.x][unit.y][16] = 1
+                    aiAction[unit.x][unit.y][3] = 2
                 elif action.parameter == action.DIRECTION_LEFT:
-                    aiAction[unit.x][unit.y][17] = 1
+                    aiAction[unit.x][unit.y][3] = 3
 
             elif action.type == action.TYPE_PRODUCE:
-                aiAction[unit.x][unit.y][4] = 1
+                aiAction[unit.x][unit.y][0] = 4
 
                 if action.parameter == action.DIRECTION_UP:
-                    aiAction[unit.x][unit.y][18] = 1
+                    aiAction[unit.x][unit.y][4] = 0
                 elif action.parameter == action.DIRECTION_RIGHT:
-                    aiAction[unit.x][unit.y][19] = 1
+                    aiAction[unit.x][unit.y][4] = 1
                 elif action.parameter == action.DIRECTION_DOWN:
-                    aiAction[unit.x][unit.y][20] = 1
+                    aiAction[unit.x][unit.y][4] = 2
                 elif action.parameter == action.DIRECTION_LEFT:
-                    aiAction[unit.x][unit.y][21] = 1
+                    aiAction[unit.x][unit.y][4] = 3
 
                 if action.unitTypeName == "Base":
-                    aiAction[unit.x][unit.y][22] = 1
+                    aiAction[unit.x][unit.y][5] = 0
                 elif action.unitTypeName == "Barracks":
-                    aiAction[unit.x][unit.y][23] = 1
+                    aiAction[unit.x][unit.y][5] = 1
                 elif action.unitTypeName == "Worker":
-                    aiAction[unit.x][unit.y][24] = 1
+                    aiAction[unit.x][unit.y][5] = 2
                 elif action.unitTypeName == "Light":
-                    aiAction[unit.x][unit.y][25] = 1
+                    aiAction[unit.x][unit.y][5] = 3
                 elif action.unitTypeName == "Heavy":
-                    aiAction[unit.x][unit.y][26] = 1
+                    aiAction[unit.x][unit.y][5] = 4
                 elif action.unitTypeName == "Ranged":
-                    aiAction[unit.x][unit.y][27] = 1
+                    aiAction[unit.x][unit.y][5] = 5
 
             elif action.type == action.TYPE_ATTACK_LOCATION:
-                aiAction[unit.x][unit.y][5] = 1
+                aiAction[unit.x][unit.y][0] = 5
 
                 relativeX = action.x - unit.x + self.maxRange
                 relativeY = action.y - unit.y + self.maxRange
 
-                aiAction[unit.x][unit.y][28 + relativeX + relativeY * (self.maxRange * 2 + 1)] = 1
+                aiAction[unit.x][unit.y][6] = relativeX + relativeY * (self.maxRange * 2 + 1)
         
         return aiAction
 
@@ -522,41 +522,39 @@ class Env:
         for x in range(self.terrainWidth):
             for y in range(self.terrainHeight):
                 _action = aiAction[x][y]
-                if np.any(_action[0:6] > np.zeros(6)):
-                    find: bool = False
-                    for unit in self.units:
-                        if unit.x == x and unit.y == y:
-                            maxType             = np.argmax(_action[0:6])
-                            maxMoveParam        = np.argmax(_action[6:10])
-                            maxHarvestParam     = np.argmax(_action[10:14])
-                            maxReturnParam      = np.argmax(_action[14:18])
-                            maxProduceParam     = np.argmax(_action[18:22])
-                            maxProduceTypeParam = np.argmax(_action[22:28])
-                            maxAttackParam = np.argmax(_action[28:28 + (self.maxRange * 2 + 1) ** 2])
+                # Check if action type is equal to None
+                if _action[0] == 0:
+                    continue
 
-                            if maxType == 0: # NONE
-                                find = True
-                            elif maxType == 1: # MOVE
-                                actions += [[unit, UnitAction.typeMove(directions[maxMoveParam])]]
-                                find = True
-                            elif maxType == 2: # HARVEST
-                                actions += [[unit, UnitAction.typeHarvest(directions[maxHarvestParam])]]
-                                find = True
-                            elif maxType == 3: # RETURN
-                                actions += [[unit, UnitAction.typeReturn(directions[maxReturnParam])]]
-                                find = True
-                            elif maxType == 4: # PRODUCE
-                                actions += [[unit, UnitAction.typeProduce(directions[maxProduceParam], unitTypes[maxProduceTypeParam])]]
-                                find = True
-                            elif maxType == 5: # ATTACK
-                                relativeY = maxAttackParam // (self.maxRange * 2 + 1)
-                                relativeX = maxAttackParam - relativeY * (self.maxRange * 2 + 1)
-                                _x = unit.x - self.maxRange + relativeX
-                                _y = unit.y - self.maxRange + relativeY
-                                actions += [[unit, UnitAction.typeAttack(_x, _y)]]
-                                find = True
-                    if not find:
-                        raise Exception("An action was given to a non owned unit.")
+                find: bool = False
+                for unit in self.units:
+                    if unit.x == x and unit.y == y:
+                        maxType             = np.int64(_action[0])
+                        maxMoveParam        = np.int64(_action[1])
+                        maxHarvestParam     = np.int64(_action[2])
+                        maxReturnParam      = np.int64(_action[3])
+                        maxProduceParam     = np.int64(_action[4])
+                        maxProduceTypeParam = np.int64(_action[5])
+                        maxAttackParam      = np.int64(_action[6])
+
+                        if maxType == 1: # MOVE
+                            actions += [[unit, UnitAction.typeMove(directions[maxMoveParam])]]
+                        elif maxType == 2: # HARVEST
+                            actions += [[unit, UnitAction.typeHarvest(directions[maxHarvestParam])]]
+                        elif maxType == 3: # RETURN
+                            actions += [[unit, UnitAction.typeReturn(directions[maxReturnParam])]]
+                        elif maxType == 4: # PRODUCE
+                            actions += [[unit, UnitAction.typeProduce(directions[maxProduceParam], unitTypes[maxProduceTypeParam])]]
+                        elif maxType == 5: # ATTACK
+                            relativeY = maxAttackParam // (self.maxRange * 2 + 1)
+                            relativeX = maxAttackParam - relativeY * (self.maxRange * 2 + 1)
+                            _x = unit.x - self.maxRange + relativeX
+                            _y = unit.y - self.maxRange + relativeY
+                            actions += [[unit, UnitAction.typeAttack(_x, _y)]]
+                        find = True
+                        break
+                if not find:
+                    raise Exception("An action was given to a non owned unit.")
 
         return actions
 
@@ -570,6 +568,10 @@ class Env:
     
     def getMask(self):
         mask = np.zeros(self.action_space.shape, dtype=bool)
+
+        for x in range(self.terrainWidth):
+            for y in range(self.terrainHeight):
+                mask[x][y][0] = True
 
         for unitWithActions in self.availableActions:
             _unit: Unit = unitWithActions[0]
