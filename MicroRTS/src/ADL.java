@@ -19,7 +19,7 @@ public class ADL {
 
     public static void main(String[] args) throws Exception
     {        
-        if (args.length != 1)
+        if (args.length != 2)
             return;
 
         try {
@@ -32,7 +32,7 @@ public class ADL {
 
             // Argument à récupérer via envoie de message
             int serializationType = 2; // JSON
-            String mapLocation = "../maps/3x3/bases3x3.xml";
+            String mapLocation = args[1];
             int maxCycles = 10000;
             int updateInterval = 5;
             int uttVersion = 2;
@@ -69,7 +69,9 @@ public class ADL {
 
             while(!stop){
                 try{
+                    System.out.println("new Game");
                     Game game = new Game(gameSettings, player_one, player_two);
+                    System.out.println("game.start()");
                     game.start();
                 }
                 catch(Exception e){}

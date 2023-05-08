@@ -1,5 +1,6 @@
 import socket
 import json
+import subprocess
 import numpy as np
 import time
 
@@ -14,7 +15,7 @@ from rts.player.player_action import PlayerAction
 from rts.physical_game_state import PhysicalGameState
 
 DEBUG = False
-HEADLESS = True
+HEADLESS = False
 
 if not HEADLESS:
     from env.board import Board
@@ -22,9 +23,20 @@ if not HEADLESS:
 HOST = "127.0.0.1"
 PORT = 10000
 
+import threading
+class JavaThread (threading.Thread):
+    def __init__(self, port: int, mapLocation: str):
+        threading.Thread.__init__(self)
+        self.port = port
+        self.mapLocation = mapLocation
+
+    def run(self):
+        subprocess.call(['java', '-jar', '../MicroRTS/bin/MicroRTS.jar', str(self.port), self.mapLocation])
+
 class Env:
-    def __init__(self):
+    def __init__(self, mapLocation: str):
         # Core variables
+        self.mapLocation:       str                                 = mapLocation
         self.clientSocket:      socket.socket                       = None
         self.timeBudget:        int                                 = -1
         self.iterationsBudget:  int                                 = -1
@@ -71,6 +83,8 @@ class Env:
         self.enemyKilledReward:     float = 10
 
     def start(self):
+        JavaThread(PORT, self.mapLocation).start()
+
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connected = False
 
@@ -183,7 +197,7 @@ class Env:
         playerAction = PlayerAction()
 
         if not HEADLESS:
-            time.sleep(0.02)
+            time.sleep(0.001)
 
         actions = self.aiActionToActions(aiActions)
         for action in actions:

@@ -1,6 +1,6 @@
 from env.env import Env
 
-env = Env()
+env = Env("../MicroRTS/maps/3x3/bases3x3.xml")
 
 observation = env.start()
 
