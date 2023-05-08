@@ -18,7 +18,7 @@ class Board:
     def __init__(self):
         pygame.init()
         pygame.font.init()
-        self.font = pygame.font.Font(size = 24)
+        self.font = pygame.font.Font(None, 24)
         self.screen = pygame.display.set_mode((100, 100))        
         self.cell_dimension = 0
         self.padding = 0
