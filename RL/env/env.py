@@ -105,7 +105,6 @@ class Env:
         # In reference to the structuration given in Rapport_ADL_2.pdf page 8.
 
         self.computeObservation()
-
         return self.observation
     
     def computeObservation(self):
@@ -224,6 +223,9 @@ class Env:
         while not self.waitForInput:
             self.receiveMessage()
             self.processMessage()
+        
+        self.computeObservation()
+        return self.observation
 
     def stop(self):
         if DEBUG:
@@ -410,7 +412,7 @@ class Env:
     def processMessage(self):
         messages = self.currentMessage.split(b'\n')
         self.currentMessage = messages[-2]
-
+        
         if messages[0].startswith(b'budget'):
             self.processBudget()
         elif messages[0].startswith(b'utt'):
@@ -567,7 +569,7 @@ class Env:
         return self.actionsToAiAction(actions)
     
     def getMask(self):
-        mask = np.zeros(self.action_space.shape, dtype=bool)
+        mask = np.zeros((self.terrainWidth, self.terrainHeight, 28 + (self.maxRange * 2 + 1) ** 2), dtype=bool)
 
         for x in range(self.terrainWidth):
             for y in range(self.terrainHeight):
