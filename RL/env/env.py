@@ -585,17 +585,13 @@ class Env:
     def getMask(self):
         mask = np.zeros((self.terrainWidth, self.terrainHeight, 28 + (self.maxRange * 2 + 1) ** 2), dtype=bool)
 
-        for x in range(self.terrainWidth):
-            for y in range(self.terrainHeight):
-                mask[x][y][0] = True
-
         for unitWithActions in self.availableActions:
             _unit: Unit = unitWithActions[0]
             for action in unitWithActions[1]:
                 _action: UnitAction = action
 
                 if _action.type == _action.TYPE_NONE:
-                    mask[_unit.x][_unit.y][0] = True  
+                    break
 
                 elif _action.type == _action.TYPE_MOVE:
                     mask[_unit.x][_unit.y][1] = True   
@@ -666,4 +662,8 @@ class Env:
 
                     mask[_unit.x][_unit.y][28 + relativeX + relativeY * (self.maxRange * 2 + 1)] = True
 
+        for x in range(self.terrainWidth):
+            for y in range(self.terrainHeight):
+                mask[x][y][0] = True
+                    
         return mask

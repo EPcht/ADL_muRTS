@@ -69,9 +69,7 @@ public class ADL {
 
             while(!stop){
                 try{
-                    System.out.println("new Game");
                     Game game = new Game(gameSettings, player_one, player_two);
-                    System.out.println("game.start()");
                     game.start();
                 }
                 catch(Exception e){}
