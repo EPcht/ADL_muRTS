@@ -2,6 +2,8 @@ Ce projet prend place dans le cadre de l'enseignement "Analyse et Développement
 
 ![logo université limoges](Images/logo_limoges.png?raw=true)
 
+changes.txt contient les changements effectué dans les fichier java afin de permettre l'utilisation de notre code.
+
 Executer depuis MicroRTS/bin le script ADL.bat afin de créer les .class et le .jar
 
 Executer ensuite depuis RL "python .\main.py"
