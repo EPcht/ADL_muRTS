@@ -13,6 +13,8 @@ from tf_agents.distributions.masked import MaskedCategorical
 
 import keras.layers as layers
 
+from time import sleep
+
 from gym_microrts import microrts_ai
 from gym_microrts.envs.vec_env import MicroRTSGridModeVecEnv
 
@@ -29,22 +31,23 @@ envs = MicroRTSGridModeVecEnv(
     ai2s=[
         #microrts_ai.coacAI,
         #microrts_ai.lightRushAI,
-        microrts_ai.workerRushAI,
+        #microrts_ai.workerRushAI,
+        microrts_ai.POHeavyRush,
     ],
-    map_paths=["maps/16x16/basesWorkers16x16.xml"],
-    reward_weight=np.array([200.0, 1.0, 1.0, 0.2, 1.0, 4.0]),
+    map_paths=["maps/8x8/basesWorkers8x8.xml"],
+    reward_weight=np.array([20.0, 1.0, 1.0, 0.2, 1.0, 4.0]),
 )
 
 nb_games = 4
 
-size_map = 16
-size_map2 = 256
+size_map = 8
+size_map2 = 64
 
 
 class Agent():
     def __init__(self, envs):
         
-        self.actor = tf.keras.models.load_model('./model_saves/actor.tf')
+        self.actor = tf.keras.models.load_model('./model_saves/actor_8x8.tf')
         
         self.actor.summary()
         
@@ -91,10 +94,15 @@ for i in range(nb_games):
     
     next_done = np.zeros((envs.num_envs,))
     next_obs  = envs.reset()
+    envs.render()
+    
+    sleep(1.5)
+    
 
     while next_done[0] == 0:
         
         envs.render()
+        sleep(0.005)
         obs = next_obs
         done = next_done
 
@@ -105,7 +113,9 @@ for i in range(nb_games):
         
     if reward[0] > 0:
         print("Game won!")
-    else:
+    if reward[0] < 0:
         print("Game lost :(")
+    if reward[0] == 0:
+        print("It's a draw!")
     
 envs.close()
